@@ -13,10 +13,16 @@ Wilfred::Application.routes.draw do
   resources :commits
   post "/commits/:id/remind", to: "commits#remind", as: :remind_commit
   post "/commits/:id/verify", to: "commits#verify", as: :verify_commit
-  post "/commits/:id/fail", to: "commits#fail", as: :fail_commit  
+  post "/commits/:id/fail", to: "commits#fail", as: :fail_commit
 
   authenticated :user do
     root to: "commits#index", as: :authenticated_root
+  end
+
+  scope :api do
+    scope "/repos/:repo_id" do
+      get "/commits", to: "api/commits#index"
+    end
   end
 
   root to: "public#index"

@@ -11,6 +11,7 @@ class Commit < ActiveRecord::Base
   scope :failed, -> { where(state: "failed") }
   scope :unchecked, -> { where(state: nil) }
   scope :verified, -> { where(state: "verified") }
+  scope :unverified, -> { where("commits.state != 'verified' or commits.state is null") }
 
   def formatted_sha1
     sha1[0..6]
