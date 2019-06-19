@@ -18,7 +18,7 @@ class CommitsController < ApplicationController
   end
 
   def remind
-    link_to_commit = "#{Rails.application.routes.url_helpers.root_url}commits/#{@commit.id}"
+    link_to_commit = "%scommits/%s" % [Rails.application.routes.url_helpers.root_url, @commit.id]
 
     slack_message = "This is a friendly reminder from <@%s> to <%s/|verify your commit>, %s (%s), on staging." % [current_user.slack_username, link_to_commit, @commit.formatted_sha1, @commit.message]
 
