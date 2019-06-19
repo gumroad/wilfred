@@ -12,15 +12,9 @@ class CommitsController < ApplicationController
     prepare_commits
   end
 
-  def show
-    return redirect_to onboarding_url if current_user.incomplete?
-    return redirect_to user_slack_omniauth_authorize_path if current_user.slack_username.nil?
-  end
-
   def remind
-    link_to_commit = "%scommits/%s" % [Rails.application.routes.url_helpers.root_url, @commit.id]
-
-    slack_message = "This is a friendly reminder from <@%s> to <%s/|verify your commit>, %s (%s), on staging." % [current_user.slack_username, link_to_commit, @commit.formatted_sha1, @commit.message]
+    slack_message = "This is a friendly reminder from <@%s> to <%s|verify your commit>, %s (%s), on staging." % [current_user.slack_username, 
+                    Rails.application.routes.url_helpers.root_url, @commit.formatted_sha1, @commit.message]
 
     @commit.notify_user_to_verify(current_user, slack_message)
     prepare_commits
