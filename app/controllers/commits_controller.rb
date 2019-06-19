@@ -12,6 +12,11 @@ class CommitsController < ApplicationController
     prepare_commits
   end
 
+  def show
+    return redirect_to onboarding_url if current_user.incomplete?
+    return redirect_to user_slack_omniauth_authorize_path if current_user.slack_username.nil?
+  end
+
   def remind
     slack_message = "This is a friendly reminder from <@%s> to verify your commit, %s (%s), on staging." % [current_user.slack_username, @commit.formatted_sha1, @commit.message]
     @commit.notify_user_to_verify(current_user, slack_message)
