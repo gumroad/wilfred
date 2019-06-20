@@ -14,6 +14,7 @@ There are a few environment variables that must be set in `config/application.ym
 - `GH_APP_SECRET` (the secret of your GitHub application)
 - `SLACK_APP_ID` (the id of your Slack application)
 - `SLACK_APP_SECRET` (the secret of your Slack application)
+- `SLACK_SIGNING_SECRET` (slacks signing secret, used to verify requests coming from slack)
 - `SLACK_ROOM` (the Slack channel you want deploy notifications to show up in)
 - `PRODUCTION_HOST` (e.g. https://wilfred.com)
 - `DEVELOPMENT_HOST` (e.g. http://local.host:3000)
