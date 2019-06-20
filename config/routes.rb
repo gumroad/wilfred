@@ -15,6 +15,8 @@ Wilfred::Application.routes.draw do
   post "/commits/:id/verify", to: "commits#verify", as: :verify_commit
   post "/commits/:id/fail", to: "commits#fail", as: :fail_commit
 
+  post "/commits/verify_from_slack", to: "commits#verify_from_slack", as: :verify_commit_from_slack
+
   authenticated :user do
     root to: "commits#index", as: :authenticated_root
   end

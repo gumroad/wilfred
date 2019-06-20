@@ -2,7 +2,7 @@
 
 class CommitsController < ApplicationController
   skip_before_filter :verify_authenticity_token
-  before_filter :fetch_commit, except: [:index]
+  before_filter :fetch_commit, except: [:index, :verify_from_slack]
 
   PAST_COMMIT_COUNT = 25
 
@@ -28,6 +28,30 @@ class CommitsController < ApplicationController
     render_json_success_response
   end
 
+  def verify_from_slack
+    slack_payload = JSON.parse(params["payload"])
+    is_verified_request = Slack::Events::Request.new(request).verify!
+
+    callback_message = slack_payload["callback_id"].split(":")
+    current_user = User.find_by(slack_username: slack_payload["user"]["id"])
+
+    if(callback_message[0] == "verify_commit_from_slack" && is_verified_request) 
+      commit_id = callback_message[1]
+      @commit = Commit.find(commit_id)
+
+      @commit.update_attributes(state: "verified")
+      prepare_commits(user: current_user)
+      current_user.notify_to_deploy if @unchecked_commits.empty? && @failed_commits.empty?
+
+      slack_message = "The commit: %s (%s) was verified by <@%s>" % [@commit.formatted_sha1, 
+                      @commit.message, current_user.slack_username]
+
+      render_json_for_slack slack_message, type: :public, replace: true
+    else
+      render_json_for_slack "Sorry verification failed, please try again."
+    end
+  end
+
   def fail
     @commit.update_attributes(state: "failed")
     prepare_commits
@@ -40,10 +64,28 @@ class CommitsController < ApplicationController
       @commit = Commit.find(params[:id])
     end
 
-    def prepare_commits
-      @past_commits = current_user.repo.commits.verified.limit(PAST_COMMIT_COUNT).all
-      @failed_commits = current_user.repo.commits.failed
-      @unchecked_commits = current_user.repo.commits.unchecked
+    def prepare_commits(user: :use_default)
+      if(user == :use_default)
+         user = current_user
+      end
+
+      @past_commits = user.repo.commits.verified.limit(PAST_COMMIT_COUNT).all
+      @failed_commits = user.repo.commits.failed
+      @unchecked_commits = user.repo.commits.unchecked
+    end
+
+    def render_json_for_slack(message, type: :private, replace: false) 
+      if(type == :public)
+        response_type = "in_channel"
+      else
+        response_type = "ephemeral"
+      end
+
+      render json: { 
+        response_type: response_type,
+        replace_original: replace,
+        text: message
+     }
     end
 
     def render_json_success_response
