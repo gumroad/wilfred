@@ -28,10 +28,29 @@ class Commit < ActiveRecord::Base
 
   def notify_user_to_verify(user, slack_message)
     slack_username = User.find_by_email(email).try(:slack_username)
+    verify_button = [{
+            fallback: "Are you ready to verify this commit?",
+            title: "Are you ready to verify this commit?",
+            callback_id: "verify_commit_from_slack:%s" % [id],
+            color: "#3AA3E3",
+            attachment_type: "default",
+            actions: [
+                {
+                    name: "verify",
+                    text: "Verify",
+                    type: "button",
+                    value: self.id
+                },
+            ]
+        }]
 
     if slack_username.present?
       Rails.logger.info("saying to #{slack_username}: #{slack_message}")
-      user.slack.chat_postMessage(channel: slack_username, text: slack_message, username: "Wilfred", as_user: false)
+      user.slack.chat_postMessage(channel: slack_username, 
+                                  text: slack_message, 
+                                  username: "Wilfred", 
+                                  as_user: false,
+                                  attachments: verify_button)
     end
   end
 
